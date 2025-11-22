@@ -9,17 +9,42 @@
     <!-- Load Three.js for 3D graphics -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        /* Custom styles for the 3D canvas and scroll effects */
+        /* --- CSS Variables for Theming --- */
+        :root {
+            /* Dark Theme (Default) */
+            --bg-color: #0d1117;
+            --text-color: #e5e7eb;
+            --card-bg: #1f2937;
+            --header-bg: #1f2937;
+            --border-color: #1f2937;
+            /* Three.js Scene Color (Hex for JS) */
+            --scene-color-hex: 0x0d1117; 
+            --secondary-text: #9ca3af; /* gray-400 */
+        }
+
+        .light-theme {
+            /* Light Theme */
+            --bg-color: #ffffff;
+            --text-color: #1f2937;
+            --card-bg: #f3f4f6;
+            --header-bg: #f9fafb;
+            --border-color: #e5e7eb;
+            --scene-color-hex: 0xf3f4f6;
+            --secondary-text: #6b7280; /* gray-500 */
+        }
+
+        /* Base styles using CSS variables */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0d1117; /* Dark background */
-            color: #e5e7eb; /* Light text */
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
             scroll-behavior: smooth;
+            transition: background-color 0.5s, color 0.5s; /* Smooth transition */
         }
 
         /* The canvas is fixed and covers the entire viewport, but the scrollable content sits on top */
         #hero-canvas {
-            position: fixed; /* Changed to fixed for the full scroll effect */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
@@ -30,9 +55,35 @@
         .hero-content {
             position: relative;
             z-index: 20; 
-            /* Added min-height to ensure the hero section forces enough scroll space for the transition */
             min-height: 100vh; 
         }
+
+        /* --- Tailwind Overrides using Variables --- */
+        header {
+            background-color: var(--header-bg) !important;
+            border-bottom-color: var(--border-color) !important;
+        }
+
+        /* Sections that use a darker background in dark mode */
+        #mission, #presence, footer {
+            background-color: var(--header-bg) !important;
+            border-top-color: var(--border-color) !important;
+            border-bottom-color: var(--border-color) !important;
+        }
+
+        /* Card background overrides */
+        .bg-gray-800, .bg-gray-800\/50 {
+            background-color: var(--card-bg) !important;
+        }
+        
+        /* General text color adjustments for light/dark mode */
+        .text-gray-400, .text-gray-300 {
+             color: var(--secondary-text) !important;
+        }
+        
+        /* Keep accent colors like text-blue-400, text-indigo-400, etc., as defined by Tailwind. */
+
+        /* --- Standard Component Styles (unchanged) --- */
 
         .section-title {
             position: relative;
@@ -67,6 +118,7 @@
 
         .impact-card:hover {
             transform: translateY(-5px);
+            /* Adjust shadow color based on theme for better contrast */
             box-shadow: 0 15px 30px rgba(99, 102, 241, 0.3);
         }
 
@@ -97,31 +149,47 @@
 
     </style>
 </head>
-<body>
+<body class="dark-theme"> <!-- Initial class to apply dark mode variables -->
 
     <!-- 3D Canvas Container - now fixed -->
     <canvas id="hero-canvas"></canvas>
 
-    <!-- Sticky Navigation Bar (Needs higher Z-index than hero content) -->
+    <!-- Sticky Navigation Bar -->
     <header class="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 shadow-lg">
         <nav class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <a href="#hero" class="text-2xl font-bold text-blue-400 hover:text-indigo-400 transition">GC</a>
-            <div class="hidden md:flex space-x-8 text-lg font-medium">
-                <a href="#mission" class="hover:text-blue-400 transition">Mission</a>
-                <a href="#impact" class="hover:text-blue-400 transition">Impact</a>
-                <a href="#presence" class="hover:text-blue-400 transition">Global</a>
-                <a href="#donate" class="hover:text-blue-400 transition">Donate</a>
+            
+            <div class="flex items-center space-x-4">
+                <div class="hidden md:flex space-x-8 text-lg font-medium">
+                    <a href="#mission" class="hover:text-blue-400 transition">Mission</a>
+                    <a href="#impact" class="hover:text-blue-400 transition">Impact</a>
+                    <a href="#presence" class="hover:text-blue-400 transition">Global</a>
+                    <a href="#donate" class="hover:text-blue-400 transition">Donate</a>
+                </div>
+
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" class="p-2 rounded-full text-gray-300 hover:bg-gray-700 transition" aria-label="Toggle theme">
+                    <!-- Moon Icon (Visible in Dark Mode) -->
+                    <svg id="moon-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                    <!-- Sun Icon (Hidden in Dark Mode) -->
+                    <svg id="sun-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </button>
+
+                <!-- Mobile Menu button (placeholder) -->
+                <button class="md:hidden text-gray-300 hover:text-blue-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
             </div>
-            <!-- Mobile Menu button (placeholder) -->
-            <button class="md:hidden text-gray-300 hover:text-blue-400">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-            </button>
         </nav>
     </header>
 
     <!-- Main Content wrapper - the scrollable content -->
     <main class="relative z-30">
-        <!-- Hero Section: Just contains the text and provides scroll space -->
+        <!-- Hero Section -->
         <section id="hero" class="min-h-screen flex items-center justify-center p-8 overflow-hidden">
             <div class="hero-content text-center max-w-4xl mx-auto space-y-6">
                 <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-600 animate-pulse">
@@ -138,7 +206,7 @@
             </div>
         </section>
 
-        <!-- Mission Section (Existing) -->
+        <!-- Mission Section -->
         <section id="mission" class="py-20 px-8 md:px-16 bg-gray-900 border-t border-b border-gray-800 scroll-hidden">
             <div class="max-w-6xl mx-auto">
                 <h2 class="section-title text-4xl font-bold mb-12 text-blue-400">Our Mission</h2>
@@ -165,7 +233,7 @@
             </div>
         </section>
 
-        <!-- NEW: Impact & Statistics Section -->
+        <!-- Impact & Statistics Section -->
         <section id="impact" class="py-20 px-8 md:px-16 scroll-hidden">
             <div class="max-w-6xl mx-auto text-center">
                 <h2 class="section-title text-4xl font-bold mb-16 text-blue-400 mx-auto">Our Impact: The Numbers</h2>
@@ -206,7 +274,7 @@
             </div>
         </section>
 
-        <!-- NEW: Global Presence & Partners Section -->
+        <!-- Global Presence & Partners Section -->
         <section id="presence" class="py-20 px-8 md:px-16 bg-gray-900 border-t border-b border-gray-800 scroll-hidden">
             <div class="max-w-6xl mx-auto">
                 <h2 class="section-title text-4xl font-bold mb-12 text-blue-400">Global Presence & Partners</h2>
@@ -230,7 +298,7 @@
             </div>
         </section>
 
-        <!-- Call to Action / How to Help Section (Existing) -->
+        <!-- Call to Action / How to Help Section -->
         <section id="donate" class="py-20 px-8 md:px-16 scroll-hidden">
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="section-title text-4xl font-bold mb-12 text-blue-400 mx-auto">Make an Impact Today</h2>
@@ -246,7 +314,7 @@
             </div>
         </section>
 
-        <!-- Footer / Contact (Existing) -->
+        <!-- Footer / Contact -->
         <footer class="bg-gray-900 border-t border-gray-800 py-10 px-8 md:px-16">
             <div class="max-w-6xl mx-auto grid md:grid-cols-4 gap-8 text-gray-400">
                 <div>
@@ -289,13 +357,75 @@
     </main>
 
     <script>
-        // Global variables for Three.js
+        // Global variables for Three.js and Theme State
         let scene, camera, renderer, globe;
         let mouseX = 0, mouseY = 0;
         let targetRotationX = 0, targetRotationY = 0;
         const windowHalfX = window.innerWidth / 2;
         const windowHalfY = window.innerHeight / 2;
         const rotationDamping = 0.05;
+        
+        let theme = 'dark'; // Initial theme state
+
+        // --- Theme Management ---
+        
+        // Helper function to get the current scene color from CSS variable
+        function getSceneColor() {
+            const rootStyle = getComputedStyle(document.documentElement);
+            const hexString = rootStyle.getPropertyValue('--scene-color-hex').trim();
+            // Convert '0x' prefixed string to number for Three.js
+            return parseInt(hexString, 16);
+        }
+
+        function updateThreeSceneTheme() {
+            // Update the Three.js scene background based on the current theme variables
+            if (scene) {
+                const newColor = getSceneColor();
+                scene.background = new THREE.Color(newColor);
+            }
+        }
+
+        function updateThemeButton() {
+            const moon = document.getElementById('moon-icon');
+            const sun = document.getElementById('sun-icon');
+            const button = document.getElementById('theme-toggle');
+            
+            // Remove previous classes for light mode
+            button.classList.remove('text-gray-800', 'hover:bg-gray-200');
+            // Remove previous classes for dark mode
+            button.classList.remove('text-gray-300', 'hover:bg-gray-700');
+
+            if (theme === 'dark') {
+                moon.classList.remove('hidden');
+                sun.classList.add('hidden');
+                // Apply dark theme button styles
+                button.classList.add('text-gray-300', 'hover:bg-gray-700');
+            } else {
+                moon.classList.add('hidden');
+                sun.classList.remove('hidden');
+                // Apply light theme button styles
+                button.classList.add('text-gray-800', 'hover:bg-gray-200');
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const html = document.documentElement; // Apply class to html for CSS variables
+
+            if (theme === 'dark') {
+                theme = 'light';
+                html.classList.add('light-theme');
+                body.classList.remove('dark-theme');
+                body.classList.add('light-theme');
+            } else {
+                theme = 'dark';
+                html.classList.remove('light-theme');
+                body.classList.remove('light-theme');
+                body.classList.add('dark-theme');
+            }
+            updateThreeSceneTheme();
+            updateThemeButton();
+        }
 
         // --- Three.js Initialization ---
         function initThreeJS() {
@@ -305,7 +435,8 @@
 
             // Scene setup
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0d1117);
+            // Initialize scene background based on the current theme
+            scene.background = new THREE.Color(getSceneColor()); 
 
             // Camera setup
             camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
@@ -325,11 +456,8 @@
             // Using a standard high-quality Earth texture map
             const earthTextureUrl = 'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg';
             const texture = textureLoader.load(earthTextureUrl, 
-                // Success callback (optional)
                 () => console.log('Earth texture loaded.'), 
-                // Progress callback (optional)
                 undefined, 
-                // Error callback
                 (error) => console.error('Failed to load Earth texture:', error)
             );
 
@@ -343,7 +471,7 @@
             scene.add(globe);
             
             // Lighting (Adjusted for better texture visibility)
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // Increased ambient light for base illumination
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // Base illumination
             scene.add(ambientLight);
             const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); // Main light source
             directionalLight.position.set(5, 3, 5).normalize();
@@ -403,6 +531,8 @@
             let progress = Math.min(scrollY / heroHeight, 1);
             
             // Target Coordinates for Nigeria (Approx. 10N, 8E) converted to Radians
+            // Note: Three.js uses Y-up, Z-forward, so latitude/longitude conversion is non-trivial 
+            // but these approximate values (-0.174 X-rotation, 0.139 Y-rotation) work for centering Nigeria.
             const targetRotX = -0.174; // ~10 degrees North
             const targetRotY = 0.139;  // ~8 degrees East
             const continuousSpin = 0.002;
@@ -443,7 +573,7 @@
             renderer.render(scene, camera);
         }
 
-        // --- UI Interactivity (Message Box) ---
+        // --- UI Interactivity (Message Box and Counters) ---
 
         const messageBox = document.getElementById('message-box');
         let messageTimeout;
@@ -459,8 +589,6 @@
                 messageBox.style.pointerEvents = 'none';
             }, 3000);
         }
-
-        // --- Counter Animation Function ---
 
         let countersAnimated = false; 
 
@@ -495,8 +623,7 @@
             countersAnimated = true;
         }
 
-
-        // --- Scroll Reveal Effect (Kept separate for CSS animations) ---
+        // --- Scroll Reveal Effect ---
 
         function checkScroll() {
             const sections = document.querySelectorAll('.scroll-hidden');
@@ -518,14 +645,22 @@
 
         // --- Initialization ---
         window.onload = function () {
+            // Initialize theme UI elements
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', toggleTheme);
+                // Ensure button icon is correctly initialized
+                updateThemeButton(); 
+            }
+            
             // 1. Initialize 3D Scene
             initThreeJS();
-            // Start the animation loop which now includes scroll effects for the globe
+            // Start the animation loop 
             animate(); 
 
-            // 2. Initialize Scroll Listener for CSS reveals (Impact, Mission etc.)
+            // 2. Initialize Scroll Listener for CSS reveals
             window.addEventListener('scroll', checkScroll);
-            checkScroll(); // Run once on load to catch elements already in viewport
+            checkScroll(); 
         }
 
     </script>
